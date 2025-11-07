@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FormData } from './types';
-import { exportToCSV, exportToPDF, exportToXLSX } from './services/exportService';
+import { exportToCSV, exportToPDF, exportToXLSX, exportToJSON } from './services/exportService';
 
 const initialFormData: FormData = {
   date: '',
@@ -147,18 +147,21 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<'New' | 'Update'>('New');
   const [isInvoiceAddressSame, setInvoiceAddressSame] = useState(false);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
+  const [hasSavedSession, setHasSavedSession] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load saved data from localStorage on initial render
+  // On initial render, check if a session exists but do not load it automatically
   useEffect(() => {
     const savedData = localStorage.getItem('partnerFormData');
     if (savedData) {
-      setFormData(JSON.parse(savedData));
+      setHasSavedSession(true);
     }
   }, []);
 
   const handleSave = useCallback(() => {
     localStorage.setItem('partnerFormData', JSON.stringify(formData));
     setShowSaveMessage(true);
+    setHasSavedSession(true); // Ensure session state is updated on save
     setTimeout(() => {
         setShowSaveMessage(false);
     }, 3000);
@@ -223,12 +226,62 @@ const App: React.FC = () => {
   };
 
   const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear the form? This action will also remove any saved data.')) {
+    if (window.confirm('Are you sure you want to clear the form? This will remove any saved progress and cannot be undone.')) {
       setFormData(initialFormData);
       setStatus('New');
       setInvoiceAddressSame(false);
       localStorage.removeItem('partnerFormData');
+      setHasSavedSession(false);
     }
+  };
+
+  const handleRetrieve = () => {
+    const savedData = localStorage.getItem('partnerFormData');
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+      setHasSavedSession(false); // Hide the button after use
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        if (!content) throw new Error("File is empty");
+        
+        const importedData = JSON.parse(content);
+
+        // Basic validation
+        if (typeof importedData.companyName !== 'string' || typeof importedData.date !== 'string' || typeof importedData.role !== 'string') {
+          throw new Error("JSON file does not match the required format.");
+        }
+        
+        setFormData(importedData);
+        alert('Data imported successfully!');
+
+      } catch (error) {
+        console.error("Failed to import JSON file:", error);
+        alert(`Error importing file: ${error instanceof Error ? error.message : 'Invalid file format.'}`);
+      }
+    };
+    
+    reader.onerror = () => {
+      console.error("Error reading file:", reader.error);
+      alert("An error occurred while reading the file.");
+    };
+
+    reader.readAsText(file);
+
+    // Reset input value to allow re-importing the same file
+    if (e.target) e.target.value = '';
   };
 
 
@@ -453,106 +506,108 @@ const App: React.FC = () => {
                 </div>
             </div>
           </section>
-          
-          {/* Section: To be completed by Red2Roast */}
+
+          {/* Section: To be completed by Red2Roast - Internal */}
           <section className="mb-8 p-4 border rounded-lg bg-gray-50">
-            <h2 className="text-lg font-bold text-gray-700 mb-4 text-center bg-gray-200 p-2 rounded-md">To be completed by Red2Roast</h2>
-            <div className="grid grid-cols-4 gap-x-8 gap-y-2 mb-4">
-              {/* Column 1 */}
-              <div className="space-y-2">
-                <CheckboxField label="POA" name="poa" checked={formData.poa} onChange={handleChange} />
-                <CheckboxField label="Scope" name="scope" checked={formData.scope} onChange={handleChange} />
-                <CheckboxField label="GDPR" name="gdpr" checked={formData.gdpr} onChange={handleChange} />
-              </div>
-              {/* Column 2 */}
-              <div className="space-y-2">
-                <CheckboxField label="Credit" name="credit" checked={formData.credit} onChange={handleChange} />
-                <CheckboxField label="Company Registration" name="companyRegistration" checked={formData.companyRegistration} onChange={handleChange} />
-                <CheckboxField label="Passport" name="passport" checked={formData.passport} onChange={handleChange} />
-              </div>
-              {/* Column 3 */}
-              <div className="space-y-2">
-                <CheckboxField label="Signed Quote" name="signedQuote" checked={formData.signedQuote} onChange={handleChange} />
-                <CheckboxField label="Highrise" name="highrise" checked={formData.highrise} onChange={handleChange} />
-                <CheckboxField label="Credit Check" name="creditCheck" checked={formData.creditCheck} onChange={handleChange} />
-              </div>
-              {/* Column 4 */}
-              <div className="space-y-2">
-                <CheckboxField label="IT" name="it" checked={formData.it} onChange={handleChange} />
-                <CheckboxField label="Exact" name="exact" checked={formData.exact} onChange={handleChange} />
-                <CheckboxField label="Bank" name="bank" checked={formData.bank} onChange={handleChange} />
-              </div>
+            <h2 className="text-lg font-bold text-gray-700 mb-4 text-center bg-gray-200 p-2 rounded-md">To be completed by Red2Roast (Internal)</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
+                <div className="space-y-4">
+                    <CheckboxField label="POA" name="poa" checked={formData.poa} onChange={handleChange} />
+                    <CheckboxField label="Scope" name="scope" checked={formData.scope} onChange={handleChange} />
+                    <CheckboxField label="GDPR" name="gdpr" checked={formData.gdpr} onChange={handleChange} />
+                </div>
+                <div className="space-y-4">
+                    <CheckboxField label="Credit" name="credit" checked={formData.credit} onChange={handleChange} />
+                    <CheckboxField label="Company Registration" name="companyRegistration" checked={formData.companyRegistration} onChange={handleChange} />
+                    <CheckboxField label="Passport" name="passport" checked={formData.passport} onChange={handleChange} />
+                </div>
+                <div className="space-y-4">
+                    <CheckboxField label="Signed Quote" name="signedQuote" checked={formData.signedQuote} onChange={handleChange} />
+                    <CheckboxField label="Highrise" name="highrise" checked={formData.highrise} onChange={handleChange} />
+                    <CheckboxField label="Credit Check" name="creditCheck" checked={formData.creditCheck} onChange={handleChange} />
+                </div>
+                <div className="space-y-4">
+                    <CheckboxField label="IT" name="it" checked={formData.it} onChange={handleChange} />
+                    <CheckboxField label="Exact" name="exact" checked={formData.exact} onChange={handleChange} />
+                    <CheckboxField label="Bank" name="bank" checked={formData.bank} onChange={handleChange} />
+                </div>
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
-               <InputField label="Debtor No Scope" name="debtorNoScope" value={formData.debtorNoScope} onChange={handleChange} />
-               <InputField label="Creditor No Scope" name="creditorNoScope" value={formData.creditorNoScope} onChange={handleChange} />
+            <div className="grid md:grid-cols-2 gap-x-8 gap-y-4 mt-6">
+                <InputField label="Debtor No Scope" name="debtorNoScope" value={formData.debtorNoScope} onChange={handleChange} />
+                <InputField label="Creditor No Scope" name="creditorNoScope" value={formData.creditorNoScope} onChange={handleChange} />
             </div>
           </section>
 
-          {/* Section: Agreement */}
-          <section className="p-4 border rounded-lg bg-gray-50">
-              <h2 className="text-lg font-bold text-gray-700 mb-4">Agreement Management</h2>
-              <div className="mb-4">
-                <label htmlFor="remarks" className="mb-1 block text-sm font-semibold text-gray-700">Remarks</label>
-                <textarea 
-                  id="remarks"
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"
-                ></textarea>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                  <InputField label="Date" name="agreementDate" value={formData.agreementDate} onChange={handleChange} type="date"/>
-                  <InputField label="Signature" name="signature" value={formData.signature} onChange={handleChange} />
-              </div>
+          {/* Remarks and Agreement */}
+          <section className="mb-8 p-4 border rounded-lg bg-gray-50">
+            <h2 className="text-lg font-bold text-gray-700 mb-4 text-center bg-gray-200 p-2 rounded-md">Remarks & Agreement</h2>
+            <div className="space-y-4">
+                <div>
+                    <label htmlFor="remarks" className="mb-1 text-sm font-semibold text-gray-700">Remarks</label>
+                    <textarea
+                        id="remarks"
+                        name="remarks"
+                        value={formData.remarks}
+                        onChange={handleChange}
+                        rows={4}
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"
+                    />
+                </div>
+                <div className="grid md:grid-cols-2 gap-x-8">
+                    <InputField label="Date" name="agreementDate" value={formData.agreementDate} onChange={handleChange} type="date" />
+                    <InputField label="Signature" name="signature" value={formData.signature} onChange={handleChange} />
+                </div>
+            </div>
           </section>
 
-        </form>
-        
-        {/* Action Buttons */}
-        <footer className="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-center gap-4 sticky bottom-0 bg-white/80 backdrop-blur-sm py-4 -mb-8 -mx-8 px-8 rounded-b-xl">
-            <button
-              onClick={handleSave}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
+          {/* Action Buttons */}
+          <footer className="mt-8 pt-6 border-t flex flex-wrap items-center justify-center gap-4">
+            <button onClick={handleSave} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
               Save Progress
             </button>
-            <button
-              onClick={handleClear}
-              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-            >
+            <button onClick={handleClear} className="px-6 py-2 bg-gray-600 text-white font-semibold rounded-md shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
               Clear Form
             </button>
-            <button
-              onClick={() => exportToCSV(formData)}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
+            {hasSavedSession && (
+                <div className="flex items-center gap-2 p-2 bg-teal-50 border border-teal-200 rounded-md">
+                    <span className="text-sm font-medium text-teal-800">Saved session found.</span>
+                    <button onClick={handleRetrieve} className="px-4 py-1 bg-teal-600 text-white font-semibold rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition text-sm">
+                        Retrieve
+                    </button>
+                </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileImport}
+              accept="application/json"
+              className="hidden"
+              aria-hidden="true"
+            />
+            <button onClick={handleImportClick} className="px-6 py-2 bg-yellow-500 text-white font-semibold rounded-md shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 transition">
+              Import JSON
+            </button>
+            <button onClick={() => exportToJSON(formData)} className="px-6 py-2 bg-yellow-500 text-white font-semibold rounded-md shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 transition">
+              Export JSON
+            </button>
+            <button onClick={() => exportToCSV(formData)} className="px-6 py-2 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
               Export as CSV
             </button>
-            <button
-              onClick={() => exportToXLSX(formData)}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
+            <button onClick={() => exportToXLSX(formData)} className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
               Export as Excel
             </button>
-            <button
-              onClick={() => exportToPDF(formData)}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
+            <button onClick={() => exportToPDF(formData)} className="px-6 py-2 bg-red-600 text-white font-semibold rounded-md shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
               Export as PDF
             </button>
-        </footer>
+          </footer>
 
+          {showSaveMessage && (
+            <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-xl transition-opacity duration-300 animate-pulse">
+              Progress saved!
+            </div>
+          )}
+        </form>
       </div>
-      {showSaveMessage && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-green-600 text-white py-2 px-5 rounded-lg shadow-lg transition-opacity duration-300 ease-in-out opacity-100"
-             role="status"
-             aria-live="polite">
-          Progress saved!
-        </div>
-      )}
     </div>
   );
 };

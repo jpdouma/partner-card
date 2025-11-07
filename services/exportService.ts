@@ -32,6 +32,13 @@ export const exportToCSV = (data: FormData) => {
   downloadFile(blob, filename);
 };
 
+export const exportToJSON = (data: FormData) => {
+  const jsonContent = JSON.stringify(data, null, 2); // Pretty print JSON
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const filename = createFilename('Partner Card', data.companyName, data.date, 'json');
+  downloadFile(blob, filename);
+};
+
 export const exportToXLSX = (data: FormData) => {
     const ws: { [key: string]: any } = {};
     const merges: any[] = [];
