@@ -40,6 +40,7 @@ export interface FormData {
   eoriOrEin: 'eori' | 'ein';
   eoriNo: string;
   bankName: string;
+  accountName: string;
   bankAddress: string;
 
   accountIdentifierType: 'accountNo' | 'iban';

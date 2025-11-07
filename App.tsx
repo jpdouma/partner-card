@@ -34,6 +34,7 @@ const initialFormData: FormData = {
   eoriOrEin: 'eori',
   eoriNo: '',
   bankName: '',
+  accountName: '',
   bankAddress: '',
   accountIdentifierType: 'accountNo',
   accountIdentifierValue: '',
@@ -84,7 +85,7 @@ const InputField: React.FC<InputProps> = ({ label, name, value, onChange, type =
       onChange={onChange}
       required={required}
       disabled={disabled}
-      className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
+      className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
     />
   </div>
 );
@@ -108,7 +109,7 @@ const SelectField: React.FC<SelectProps> = ({ label, name, value, onChange, opti
       value={value}
       onChange={onChange}
       required={required}
-      className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition bg-white text-gray-900"
+      className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition bg-white text-gray-900"
     >
       {options.map(option => (
         <option key={option.value} value={option.value}>{option.label}</option>
@@ -134,7 +135,7 @@ const CheckboxField: React.FC<CheckboxProps> = ({ label, name, checked, onChange
             name={name as string}
             checked={checked}
             onChange={onChange}
-            className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+            className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         />
         <label htmlFor={name as string} className="ml-2 block text-sm text-gray-900">{label}</label>
     </div>
@@ -145,7 +146,8 @@ const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [status, setStatus] = useState<'New' | 'Update'>('New');
   const [isInvoiceAddressSame, setInvoiceAddressSame] = useState(false);
-  
+  const [showSaveMessage, setShowSaveMessage] = useState(false);
+
   // Load saved data from localStorage on initial render
   useEffect(() => {
     const savedData = localStorage.getItem('partnerFormData');
@@ -156,7 +158,10 @@ const App: React.FC = () => {
 
   const handleSave = useCallback(() => {
     localStorage.setItem('partnerFormData', JSON.stringify(formData));
-    alert('Form data saved!');
+    setShowSaveMessage(true);
+    setTimeout(() => {
+        setShowSaveMessage(false);
+    }, 3000);
   }, [formData]);
 
   // Add keyboard shortcut for saving
@@ -246,7 +251,7 @@ const App: React.FC = () => {
               id="form-status"
               value={status}
               onChange={handleStatusChange}
-              className="appearance-none bg-blue-100 text-blue-800 font-semibold pl-4 pr-8 py-1 rounded-md border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+              className="appearance-none bg-blue-100 text-blue-800 font-semibold pl-4 pr-8 py-1 rounded-md border border-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 cursor-pointer"
               aria-label="Form status"
             >
               <option value="New">New</option>
@@ -314,7 +319,7 @@ const App: React.FC = () => {
                               id="sameAsAddress"
                               checked={isInvoiceAddressSame}
                               onChange={handleSameAddressChange}
-                              className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                              className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           />
                           <label htmlFor="sameAsAddress" className="ml-2 block text-sm text-gray-900">Same as address</label>
                       </div>
@@ -387,66 +392,63 @@ const App: React.FC = () => {
                     <InputField label="VAT Number (if applicable)" name="vatNo" value={formData.vatNo} onChange={handleChange} />
                     <InputField label="Company Registration Number" name="companyRegNo" value={formData.companyRegNo} onChange={handleChange} />
                     <div>
-                      <label className="mb-1 text-sm font-semibold text-gray-700 block">EORI No (EU) / EIN No (US)</label>
-                      <div className="flex items-center space-x-4 mt-1 mb-2">
+                      <div className="flex items-center space-x-4 mb-2">
                           <div className="flex items-center">
-                              <input type="radio" id="eori" name="eoriOrEin" value="eori" checked={formData.eoriOrEin === 'eori'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
-                              <label htmlFor="eori" className="ml-2 block text-sm text-gray-900">EORI No (EU)</label>
+                              <input type="radio" id="eori" name="eoriOrEin" value="eori" checked={formData.eoriOrEin === 'eori'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
+                              <label htmlFor="eori" className="ml-2 block text-sm text-gray-900">EORI Number (EU)</label>
                           </div>
                           <div className="flex items-center">
-                              <input type="radio" id="ein" name="eoriOrEin" value="ein" checked={formData.eoriOrEin === 'ein'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
-                              <label htmlFor="ein" className="ml-2 block text-sm text-gray-900">EIN No (US)</label>
+                              <input type="radio" id="ein" name="eoriOrEin" value="ein" checked={formData.eoriOrEin === 'ein'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
+                              <label htmlFor="ein" className="ml-2 block text-sm text-gray-900">EIN Number (US)</label>
                           </div>
                       </div>
-                      <input id="eoriNo" name="eoriNo" type="text" value={formData.eoriNo} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition"/>
+                      <input id="eoriNo" name="eoriNo" type="text" value={formData.eoriNo} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"/>
                     </div>
                     <InputField label="Requested Credit Limit" name="requestedCreditLimit" value={formData.requestedCreditLimit} onChange={handleChange} />
                     <InputField label="Requested Payment Terms (days)" name="requestedPaymentTerms" value={formData.requestedPaymentTerms} onChange={handleChange} type="number" />
                 </div>
                 <div className="space-y-4">
                     <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleChange} />
+                    <InputField label="Account Name" name="accountName" value={formData.accountName} onChange={handleChange} />
                     <InputField label="Bank Address" name="bankAddress" value={formData.bankAddress} onChange={handleChange} />
                     <div>
-                      <label className="mb-1 text-sm font-semibold text-gray-700 block">Account No. / IBAN</label>
-                      <div className="flex items-center space-x-4 mt-1 mb-2">
+                      <div className="flex items-center space-x-4 mb-2">
                           <div className="flex items-center">
-                              <input type="radio" id="accountNoRadio" name="accountIdentifierType" value="accountNo" checked={formData.accountIdentifierType === 'accountNo'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
-                              <label htmlFor="accountNoRadio" className="ml-2 block text-sm text-gray-900">Account No.</label>
+                              <input type="radio" id="accountNoRadio" name="accountIdentifierType" value="accountNo" checked={formData.accountIdentifierType === 'accountNo'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
+                              <label htmlFor="accountNoRadio" className="ml-2 block text-sm text-gray-900">Account Number</label>
                           </div>
                           <div className="flex items-center">
-                              <input type="radio" id="ibanRadio" name="accountIdentifierType" value="iban" checked={formData.accountIdentifierType === 'iban'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
+                              <input type="radio" id="ibanRadio" name="accountIdentifierType" value="iban" checked={formData.accountIdentifierType === 'iban'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
                               <label htmlFor="ibanRadio" className="ml-2 block text-sm text-gray-900">IBAN</label>
                           </div>
                       </div>
-                      <input name="accountIdentifierValue" value={formData.accountIdentifierValue} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition"/>
+                      <input name="accountIdentifierValue" value={formData.accountIdentifierValue} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"/>
                     </div>
                     <div>
-                        <label className="mb-1 text-sm font-semibold text-gray-700 block">Swift Code / BIC</label>
-                        <div className="flex items-center space-x-4 mt-1 mb-2">
+                        <div className="flex items-center space-x-4 mb-2">
                             <div className="flex items-center">
-                                <input type="radio" id="swiftRadio" name="swiftOrBicType" value="swift" checked={formData.swiftOrBicType === 'swift'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
+                                <input type="radio" id="swiftRadio" name="swiftOrBicType" value="swift" checked={formData.swiftOrBicType === 'swift'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
                                 <label htmlFor="swiftRadio" className="ml-2 block text-sm text-gray-900">Swift Code</label>
                             </div>
                             <div className="flex items-center">
-                                <input type="radio" id="bicRadio" name="swiftOrBicType" value="bic" checked={formData.swiftOrBicType === 'bic'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
+                                <input type="radio" id="bicRadio" name="swiftOrBicType" value="bic" checked={formData.swiftOrBicType === 'bic'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
                                 <label htmlFor="bicRadio" className="ml-2 block text-sm text-gray-900">BIC</label>
                             </div>
                         </div>
-                        <input name="swiftOrBicValue" value={formData.swiftOrBicValue} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition"/>
+                        <input name="swiftOrBicValue" value={formData.swiftOrBicValue} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"/>
                     </div>
                     <div>
-                        <label className="mb-1 text-sm font-semibold text-gray-700 block">Sort Code / Routing No. (ACH/Wire)</label>
-                        <div className="flex items-center space-x-4 mt-1 mb-2">
+                        <div className="flex items-center space-x-4 mb-2">
                             <div className="flex items-center">
-                                <input type="radio" id="sortRadio" name="sortOrRoutingType" value="sort" checked={formData.sortOrRoutingType === 'sort'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
+                                <input type="radio" id="sortRadio" name="sortOrRoutingType" value="sort" checked={formData.sortOrRoutingType === 'sort'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
                                 <label htmlFor="sortRadio" className="ml-2 block text-sm text-gray-900">Sort Code</label>
                             </div>
                             <div className="flex items-center">
-                                <input type="radio" id="routingRadio" name="sortOrRoutingType" value="routing" checked={formData.sortOrRoutingType === 'routing'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"/>
-                                <label htmlFor="routingRadio" className="ml-2 block text-sm text-gray-900">Routing No.</label>
+                                <input type="radio" id="routingRadio" name="sortOrRoutingType" value="routing" checked={formData.sortOrRoutingType === 'routing'} onChange={handleChange} className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"/>
+                                <label htmlFor="routingRadio" className="ml-2 block text-sm text-gray-900">Routing Number (ACH/Wire)</label>
                             </div>
                         </div>
-                        <input name="sortOrRoutingValue" value={formData.sortOrRoutingValue} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition"/>
+                        <input name="sortOrRoutingValue" value={formData.sortOrRoutingValue} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"/>
                     </div>
                 </div>
             </div>
@@ -498,7 +500,7 @@ const App: React.FC = () => {
                   value={formData.remarks}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 transition"
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"
                 ></textarea>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
@@ -513,37 +515,44 @@ const App: React.FC = () => {
         <footer className="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-center gap-4 sticky bottom-0 bg-white/80 backdrop-blur-sm py-4 -mb-8 -mx-8 px-8 rounded-b-xl">
             <button
               onClick={handleSave}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Save Progress
             </button>
             <button
               onClick={handleClear}
-              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
             >
               Clear Form
             </button>
             <button
               onClick={() => exportToCSV(formData)}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Export as CSV
             </button>
             <button
               onClick={() => exportToXLSX(formData)}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Export as Excel
             </button>
             <button
               onClick={() => exportToPDF(formData)}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
               Export as PDF
             </button>
         </footer>
 
       </div>
+      {showSaveMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-green-600 text-white py-2 px-5 rounded-lg shadow-lg transition-opacity duration-300 ease-in-out opacity-100"
+             role="status"
+             aria-live="polite">
+          Progress saved!
+        </div>
+      )}
     </div>
   );
 };
