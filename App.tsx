@@ -191,6 +191,7 @@ const initialFormData: FormData = {
   signedQuote: false, highrise: false, creditCheck: false, it: false, exact: false, bank: false,
   debtorNoScope: '', creditorNoScope: '', remarks: '', agreementDate: '', signature: '',
 };
+Object.freeze(initialFormData); // Make the initial state truly immutable
 
 const constants = {
   selectOptions: {
@@ -237,7 +238,7 @@ const constants = {
 // ==================================================================================
 
 const App: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({ ...initialFormData });
+  const [formData, setFormData] = useState<FormData>(() => JSON.parse(JSON.stringify(initialFormData)));
   const [status, setStatus] = useState<'New' | 'Update'>('New');
   const [isInvoiceAddressSame, setInvoiceAddressSame] = useState(false);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
@@ -287,7 +288,10 @@ const App: React.FC = () => {
 
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear the form? This will remove any saved progress and cannot be undone.')) {
-      setFormData({ ...initialFormData });
+      // This is a robust way to ensure we get a completely new, deep-copied object.
+      // It definitively solves issues where React might not detect a state change
+      // due to subtle object reference issues.
+      setFormData(JSON.parse(JSON.stringify(initialFormData)));
       setStatus('New');
       setInvoiceAddressSame(false);
       localStorage.removeItem('partnerFormData');
@@ -341,129 +345,4 @@ const App: React.FC = () => {
       <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
         <header className="flex items-start justify-between mb-6 pb-4 border-b">
           <div className="flex items-center">
-            <svg className="w-16 h-16 text-red-600 mr-4" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50C0 77.6142 22.3858 100 50 100ZM50 88C70.9868 88 88 70.9868 88 50C88 29.0132 70.9868 12 50 12C29.0132 12 12 29.0132 12 50C12 70.9868 29.0132 88 50 88ZM60 40C60 45.5228 55.5228 50 50 50C44.4772 50 40 45.5228 40 40C40 34.4772 44.4772 30 50 30C55.5228 30 60 34.4772 60 40ZM50 55C63.8071 55 75 66.1929 75 80H25C25 66.1929 36.1929 55 50 55Z"/></svg>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Red2Roast Partner Card</h1>
-              <p className="text-gray-500">Partner Onboarding Information</p>
-            </div>
-          </div>
-          <div className="relative">
-            <SelectField label="" name="role" value={status} onChange={(e) => setStatus(e.target.value as 'New' | 'Update')} options={[{value: 'New', label: 'New'}, {value: 'Update', label: 'Update'}]} />
-          </div>
-        </header>
-
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Section title="To be completed by Red2Roast">
-            <div className="grid md:grid-cols-3 gap-6 items-end">
-              <InputField label="Date" name="date" value={formData.date} onChange={handleChange} type="date" />
-              <SelectField label="Request By" name="requestBy" value={formData.requestBy} onChange={handleChange} options={constants.selectOptions.requestBy} />
-              <SelectField label="Role" name="role" value={formData.role} onChange={handleChange} options={constants.selectOptions.role} />
-            </div>
-          </Section>
-
-          <Section title="To be completed by Debtor / Creditor">
-            <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
-              <div className="space-y-4">
-                <InputField label="Company Name" name="companyName" value={formData.companyName} onChange={handleChange} required />
-                <InputField label="Address" name="address" value={formData.address} onChange={handleChange} />
-                <InputField label="City and State" name="cityAndState" value={formData.cityAndState} onChange={handleChange} />
-                <InputField label="Post Code" name="postCode" value={formData.postCode} onChange={handleChange} />
-                <InputField label="Country" name="country" value={formData.country} onChange={handleChange} />
-                <InputField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-                <InputField label="Website" name="website" value={formData.website} onChange={handleChange} />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                      <label className="text-sm font-semibold text-gray-700">Invoice Address (If Other)</label>
-                      <CheckboxField label="Same as address" name="sameAsAddress" checked={isInvoiceAddressSame} onChange={(e) => setInvoiceAddressSame(e.target.checked)} />
-                  </div>
-                  <InputField name="invoiceAddress" value={formData.invoiceAddress} onChange={handleChange} disabled={isInvoiceAddressSame} />
-                </div>
-                <InputField label="City and State" name="invoiceCityAndState" value={formData.invoiceCityAndState} onChange={handleChange} disabled={isInvoiceAddressSame} />
-                <InputField label="Post Code" name="invoicePostCode" value={formData.invoicePostCode} onChange={handleChange} disabled={isInvoiceAddressSame} />
-                <InputField label="Country" name="invoiceCountry" value={formData.invoiceCountry} onChange={handleChange} disabled={isInvoiceAddressSame} />
-                <SelectField label="Invoice Language" name="invoiceLanguage" value={formData.invoiceLanguage} onChange={handleChange} options={constants.selectOptions.invoiceLanguage} />
-                <SelectField label="Default Currency" name="defaultCurrency" value={formData.defaultCurrency} onChange={handleChange} options={constants.selectOptions.defaultCurrency} />
-              </div>
-              <ContactSection title="Contact General" type="general" formData={formData} handleChange={handleChange} />
-              <ContactSection title="Contact Finance" type="finance" formData={formData} handleChange={handleChange} />
-            </div>
-             <hr className="my-6"/>
-            <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
-                <div className="space-y-4">
-                    <InputField label="VAT Number (if applicable)" name="vatNo" value={formData.vatNo} onChange={handleChange} />
-                    <InputField label="Company Registration Number" name="companyRegNo" value={formData.companyRegNo} onChange={handleChange} />
-                    <RadioGroupWithInput namePrefix="eoriOrEin" options={[{value: 'eori', label: 'EORI Number (EU)'}, {value: 'ein', label: 'EIN Number (US)'}]} formData={formData} handleChange={handleChange} />
-                    <InputField label="Requested Credit Limit" name="requestedCreditLimit" value={formData.requestedCreditLimit} onChange={handleChange} />
-                    <InputField label="Requested Payment Terms (days)" name="requestedPaymentTerms" value={formData.requestedPaymentTerms} onChange={handleChange} type="number" />
-                </div>
-                <div className="space-y-4">
-                    <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleChange} />
-                    <InputField label="Account Name" name="accountName" value={formData.accountName} onChange={handleChange} />
-                    <InputField label="Bank Address" name="bankAddress" value={formData.bankAddress} onChange={handleChange} />
-                    <RadioGroupWithInput namePrefix="accountIdentifier" options={[{value: 'accountNo', label: 'Account Number'}, {value: 'iban', label: 'IBAN'}]} formData={formData} handleChange={handleChange}/>
-                    <RadioGroupWithInput namePrefix="swiftOrBic" options={[{value: 'swift', label: 'Swift Code'}, {value: 'bic', label: 'BIC'}]} formData={formData} handleChange={handleChange}/>
-                    <RadioGroupWithInput namePrefix="sortOrRouting" options={[{value: 'sort', label: 'Sort Code'}, {value: 'routing', label: 'Routing Number (ACH/Wire)'}]} formData={formData} handleChange={handleChange}/>
-                </div>
-            </div>
-          </Section>
-
-          <Section title="To be completed by Red2Roast (Internal)">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
-              {constants.internalChecklist.layout.map((column, colIdx) => (
-                  <div key={colIdx} className="space-y-4">
-                      {column.map((item) => (
-                          <CheckboxField key={item} label={constants.internalChecklist.labels[item]} name={item} checked={!!formData[item as keyof FormData]} onChange={handleChange} />
-                      ))}
-                  </div>
-              ))}
-            </div>
-            <div className="grid md:grid-cols-2 gap-x-8 gap-y-4 mt-6">
-                <InputField label="Debtor No Scope" name="debtorNoScope" value={formData.debtorNoScope} onChange={handleChange} />
-                <InputField label="Creditor No Scope" name="creditorNoScope" value={formData.creditorNoScope} onChange={handleChange} />
-            </div>
-          </Section>
-
-          <Section title="Remarks & Agreement">
-            <div className="space-y-4">
-                <div>
-                    <label htmlFor="remarks" className="mb-1 text-sm font-semibold text-gray-700">Remarks</label>
-                    <textarea id="remarks" name="remarks" value={formData.remarks} onChange={handleChange} rows={4} className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"/>
-                </div>
-                <div className="grid md:grid-cols-2 gap-x-8">
-                    <InputField label="Date" name="agreementDate" value={formData.agreementDate} onChange={handleChange} type="date" />
-                    <InputField label="Signature" name="signature" value={formData.signature} onChange={handleChange} />
-                </div>
-            </div>
-          </Section>
-
-          <footer className="mt-8 pt-6 border-t flex flex-wrap items-center justify-center gap-4">
-            {actionButtons.map(({ label, onClick, className }) => (
-                <button key={label} onClick={onClick} className={`px-6 py-2 text-white font-semibold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition ${className}`}>
-                    {label}
-                </button>
-            ))}
-            {hasSavedSession && (
-                <div className="flex items-center gap-2 p-2 bg-teal-50 border border-teal-200 rounded-md">
-                    <span className="text-sm font-medium text-teal-800">Saved session found.</span>
-                    <button onClick={handleRetrieve} className="px-4 py-1 bg-teal-600 text-white font-semibold rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition text-sm">
-                        Retrieve
-                    </button>
-                </div>
-            )}
-            <input type="file" ref={fileInputRef} onChange={handleFileImport} accept="application/json" className="hidden" aria-hidden="true"/>
-          </footer>
-
-          {showSaveMessage && (
-            <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-xl transition-opacity duration-300 animate-pulse">
-              Progress saved!
-            </div>
-          )}
-        </form>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+            <svg className="w-16 h-16 text-red-600 mr-4" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.61
