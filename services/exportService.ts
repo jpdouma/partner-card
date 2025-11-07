@@ -145,7 +145,7 @@ export const exportToXLSX = (data: FormData) => {
     addCell('K44', data.financeMobile, valueStyle); mergeCells('K44', 'M45');
 
     // Financial Info
-    const eoriLabel = data.eoriOrEin === 'eori' ? 'EORI Number (EU):' : 'EIN Number (US):';
+    const eoriLabel = data.eoriOrEinType === 'eori' ? 'EORI Number (EU):' : 'EIN Number (US):';
     const accountLabel = data.accountIdentifierType === 'accountNo' ? 'Account Number:' : 'IBAN:';
     const swiftBicLabel = data.swiftOrBicType === 'swift' ? 'Swift Code:' : 'BIC:';
     const sortRoutingLabel = data.sortOrRoutingType === 'sort' ? 'Sort Code:' : 'Routing Number (ACH/Wire):';
@@ -155,7 +155,7 @@ export const exportToXLSX = (data: FormData) => {
     addCell('B51', 'Company Registration Number:');
     addCell('D51', data.companyRegNo, valueStyle); mergeCells('D51', 'H52');
     addCell('B53', eoriLabel);
-    addCell('D53', data.eoriNo, valueStyle); mergeCells('D53', 'H54');
+    addCell('D53', data.eoriOrEinValue, valueStyle); mergeCells('D53', 'H54');
     addCell('B55', 'Requested Credit Limit:');
     addCell('D55', data.requestedCreditLimit, valueStyle); mergeCells('D55', 'H56');
     addCell('B57', 'Requested Payment Terms:');
@@ -243,7 +243,7 @@ export const exportToXLSX = (data: FormData) => {
 };
 
 
-export const exportToPDF = (data: FormData) => {
+export const exportToPDF = (data: FormData, logoBase64: string) => {
   const { jsPDF } = jspdf;
   const doc = new jsPDF('p', 'pt', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -291,8 +291,12 @@ export const exportToPDF = (data: FormData) => {
   // Header
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('Red2Roast Partner Card', pageWidth / 2, y, { align: 'center' });
-  y += 30;
+  if (logoBase64) {
+      doc.addImage(logoBase64, 'PNG', margin, y - 10, 40, 40);
+  }
+  doc.text('Red2Roast Partner Card', pageWidth / 2, y + 15, { align: 'center' });
+  y += 50;
+
 
   // Red2Roast Section
   drawSectionHeader('To be completed by Red2Roast');
@@ -367,14 +371,14 @@ export const exportToPDF = (data: FormData) => {
 
   // Financial Info
   let financialY = y;
-  const eoriLabel = data.eoriOrEin === 'eori' ? 'EORI Number (EU):' : 'EIN Number (US):';
+  const eoriLabel = data.eoriOrEinType === 'eori' ? 'EORI Number (EU):' : 'EIN Number (US):';
   const accountLabel = data.accountIdentifierType === 'accountNo' ? 'Account Number:' : 'IBAN:';
   const swiftBicLabel = data.swiftOrBicType === 'swift' ? 'Swift Code:' : 'BIC:';
   const sortRoutingLabel = data.sortOrRoutingType === 'sort' ? 'Sort Code:' : 'Routing Number (ACH/Wire):';
 
   drawField('VAT Number (if applicable):', data.vatNo, col1X, financialY, 150);
   drawField('Company Registration Number:', data.companyRegNo, col1X, financialY + 25, 150);
-  drawField(eoriLabel, data.eoriNo, col1X, financialY + 50, 150);
+  drawField(eoriLabel, data.eoriOrEinValue, col1X, financialY + 50, 150);
 
   drawField('Bank Name:', data.bankName, col2X, financialY, 150);
   drawField('Account Name:', data.accountName, col2X, financialY + 25, 150);

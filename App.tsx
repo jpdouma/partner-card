@@ -25,7 +25,7 @@ interface InputProps {
   label?: string;
   name: keyof FormData | string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   type?: string;
   required?: boolean;
   disabled?: boolean;
@@ -55,9 +55,10 @@ interface SelectProps {
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: { value: string; label: string }[];
   required?: boolean;
+  className?: string;
 }
 
-const SelectField: React.FC<SelectProps> = ({ label, name, value, onChange, options, required = false }) => (
+const SelectField: React.FC<SelectProps> = ({ label, name, value, onChange, options, required = false, className = '' }) => (
   <div className="flex flex-col">
     <label htmlFor={name} className="mb-1 text-sm font-semibold text-gray-700">{label}</label>
     <select
@@ -66,7 +67,7 @@ const SelectField: React.FC<SelectProps> = ({ label, name, value, onChange, opti
       value={value}
       onChange={onChange}
       required={required}
-      className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition bg-white text-gray-900"
+      className={`p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition bg-white text-gray-900 ${className}`}
     >
       {options.map(option => (
         <option key={option.value} value={option.value}>{option.label}</option>
@@ -97,7 +98,7 @@ const CheckboxField: React.FC<CheckboxProps> = ({ label, name, checked, onChange
 );
 
 interface RadioGroupWithInputProps {
-  namePrefix: 'accountIdentifier' | 'swiftOrBic' | 'sortOrRouting';
+  namePrefix: 'accountIdentifier' | 'swiftOrBic' | 'sortOrRouting' | 'eoriOrEin';
   options: { value: string, label: string }[];
   formData: FormData;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -156,15 +157,17 @@ const ContactSection: React.FC<ContactSectionProps> = ({ title, type, formData, 
   return (
     <>
       <hr className="my-6 col-span-2"/>
-      <div className="space-y-4">
-        <h3 className="text-md font-bold text-gray-600 mt-2 border-b pb-1">{title}</h3>
-        <InputField label="Name" name={fieldName('name')} value={formData[fieldName('name')]} onChange={handleChange} />
-        <InputField label="Title" name={fieldName('title')} value={formData[fieldName('title')]} onChange={handleChange} />
-        <InputField label="Email" name={fieldName('email')} value={formData[fieldName('email')]} onChange={handleChange} type="email" />
-      </div>
-      <div className="space-y-4 md:mt-10">
-        <InputField label="Phone" name={fieldName('phone')} value={formData[fieldName('phone')]} onChange={handleChange} />
-        <InputField label="Mobile" name={fieldName('mobile')} value={formData[fieldName('mobile')]} onChange={handleChange} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <h3 className="text-md font-bold text-gray-600 mt-2 border-b pb-1">{title}</h3>
+          <InputField label="Name" name={fieldName('name')} value={String(formData[fieldName('name')])} onChange={handleChange} />
+          <InputField label="Title" name={fieldName('title')} value={String(formData[fieldName('title')])} onChange={handleChange} />
+          <InputField label="Email" name={fieldName('email')} value={String(formData[fieldName('email')])} onChange={handleChange} type="email" />
+        </div>
+        <div className="space-y-4 md:mt-10">
+          <InputField label="Phone" name={fieldName('phone')} value={String(formData[fieldName('phone')])} onChange={handleChange} />
+          <InputField label="Mobile" name={fieldName('mobile')} value={String(formData[fieldName('mobile')])} onChange={handleChange} />
+        </div>
       </div>
     </>
   );
@@ -178,13 +181,13 @@ const ContactSection: React.FC<ContactSectionProps> = ({ title, type, formData, 
 // ==================================================================================
 
 const initialFormData: FormData = {
-  date: '', requestBy: 'Gert-Jan Dokter', role: 'debtor', companyName: '', address: '',
+  status: 'New', date: '', requestBy: 'Gert-Jan Dokter', role: 'debtor', companyName: '', address: '',
   cityAndState: '', postCode: '', country: '', phone: '', website: '', invoiceAddress: '',
   invoiceCityAndState: '', invoicePostCode: '', invoiceCountry: '', invoiceLanguage: 'English',
   defaultCurrency: 'United States Dollars (USD)', generalName: '', generalTitle: '', generalEmail: '',
   generalPhone: '', generalMobile: '', financeName: '', financeTitle: '', financeEmail: '',
-  financePhone: '', financeMobile: '', vatNo: '', companyRegNo: '', eoriOrEin: 'eori',
-  eoriNo: '', bankName: '', accountName: '', bankAddress: '', accountIdentifierType: 'accountNo',
+  financePhone: '', financeMobile: '', vatNo: '', companyRegNo: '', eoriOrEinType: 'eori',
+  eoriOrEinValue: '', bankName: '', accountName: '', bankAddress: '', accountIdentifierType: 'accountNo',
   accountIdentifierValue: '', swiftOrBicType: 'swift', swiftOrBicValue: '', sortOrRoutingType: 'sort',
   sortOrRoutingValue: '', requestedCreditLimit: '', requestedPaymentTerms: '', poa: false,
   scope: false, gdpr: false, credit: false, companyRegistration: false, passport: false,
@@ -194,155 +197,274 @@ const initialFormData: FormData = {
 Object.freeze(initialFormData); // Make the initial state truly immutable
 
 const constants = {
-  selectOptions: {
-    requestBy: [
-      { value: 'Gert-Jan Dokter', label: 'Gert-Jan Dokter' },
-      { value: 'Jan Paul Douma', label: 'Jan Paul Douma' }
-    ],
-    role: [
-      { value: 'debtor', label: 'Debtor' },
-      { value: 'creditor', label: 'Creditor' }
-    ],
-    invoiceLanguage: [
-      { value: 'English', label: 'English' },
-      { value: 'Dutch', label: 'Dutch' }
-    ],
-    defaultCurrency: [
-      { value: 'United States Dollars (USD)', label: 'United States Dollars (USD)' },
-      { value: 'Euros (EUR)', label: 'Euros (EUR)' },
-      { value: 'Ugandan Shillings (UGX)', label: 'Ugandan Shillings (UGX)' }
-    ]
-  },
-  internalChecklist: {
-    labels: {
-        poa: 'POA', scope: 'Scope', gdpr: 'GDPR', credit: 'Credit',
-        companyRegistration: 'Company Registration', passport: 'Passport',
-        signedQuote: 'Signed Quote', highrise: 'Highrise', creditCheck: 'Credit Check',
-        it: 'IT', exact: 'Exact', bank: 'Bank',
-    } as Record<string, string>,
-    layout: [
-        ['poa', 'scope', 'gdpr'],
-        ['credit', 'companyRegistration', 'passport'],
-        ['signedQuote', 'highrise', 'creditCheck'],
-        ['it', 'exact', 'bank'],
-    ]
-  }
+  logoBase64: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNDQjI4MjgiLz4KPHBhdGggZD0iTTIyLjUgMzVWMTcuNUgyNS41VjM1TTIyLjUgMTIuNVY5LjVIMjUuNVYxMi41SDIyLjVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'
 };
-
 
 // ==================================================================================
 //
 //  MAIN APP COMPONENT
-//  The primary component that assembles the form.
+//  The main application component that orchestrates the form.
 //
 // ==================================================================================
 
 const App: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>(() => JSON.parse(JSON.stringify(initialFormData)));
-  const [status, setStatus] = useState<'New' | 'Update'>('New');
-  const [isInvoiceAddressSame, setInvoiceAddressSame] = useState(false);
-  const [showSaveMessage, setShowSaveMessage] = useState(false);
-  const [hasSavedSession, setHasSavedSession] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    const [formData, setFormData] = useState<FormData>(initialFormData);
+    const [isInvoiceAddressSame, setIsInvoiceAddressSame] = useState(false);
+    const logoBase64Ref = useRef(constants.logoBase64);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const savedData = localStorage.getItem('partnerFormData');
-    if (savedData) setHasSavedSession(true);
-  }, []);
+    useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            date: new Date().toISOString().split('T')[0]
+        }));
+    }, []);
 
-  const handleSave = useCallback(() => {
-    localStorage.setItem('partnerFormData', JSON.stringify(formData));
-    setShowSaveMessage(true);
-    setHasSavedSession(true);
-    setTimeout(() => setShowSaveMessage(false), 3000);
-  }, [formData]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
-        event.preventDefault();
-        handleSave();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave]);
-
-  useEffect(() => {
-    if (isInvoiceAddressSame) {
-      setFormData(prev => ({
-        ...prev,
-        invoiceAddress: prev.address,
-        invoiceCityAndState: prev.cityAndState,
-        invoicePostCode: prev.postCode,
-        invoiceCountry: prev.country,
-      }));
-    }
-  }, [isInvoiceAddressSame, formData.address, formData.cityAndState, formData.postCode, formData.country]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const { checked } = e.target as HTMLInputElement;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear the form? This will remove any saved progress and cannot be undone.')) {
-      // This is a robust way to ensure we get a completely new, deep-copied object.
-      // It definitively solves issues where React might not detect a state change
-      // due to subtle object reference issues.
-      setFormData(JSON.parse(JSON.stringify(initialFormData)));
-      setStatus('New');
-      setInvoiceAddressSame(false);
-      localStorage.removeItem('partnerFormData');
-      setHasSavedSession(false);
-    }
-  };
-
-  const handleRetrieve = () => {
-    const savedData = localStorage.getItem('partnerFormData');
-    if (savedData) {
-      setFormData(JSON.parse(savedData));
-      setHasSavedSession(false);
-    }
-  };
-
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const content = event.target?.result as string;
-        if (!content) throw new Error("File is empty");
-        const importedData = JSON.parse(content);
-        if (typeof importedData.companyName !== 'string' || typeof importedData.date !== 'string') {
-          throw new Error("JSON file does not match the required format.");
+    useEffect(() => {
+        if (isInvoiceAddressSame) {
+            setFormData(prev => ({
+                ...prev,
+                invoiceAddress: prev.address,
+                invoiceCityAndState: prev.cityAndState,
+                invoicePostCode: prev.postCode,
+                invoiceCountry: prev.country,
+            }));
         }
-        setFormData(importedData);
-        alert('Data imported successfully!');
-      } catch (error) {
-        alert(`Error importing file: ${error instanceof Error ? error.message : 'Invalid file format.'}`);
-      }
-    };
-    reader.onerror = () => alert("An error occurred while reading the file.");
-    reader.readAsText(file);
-    if (e.target) e.target.value = '';
-  };
-  
-  const actionButtons = [
-      { label: 'Save Progress', onClick: handleSave, className: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500' },
-      { label: 'Clear Form', onClick: handleClear, className: 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-500' },
-      { label: 'Import JSON', onClick: () => fileInputRef.current?.click(), className: 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400' },
-      { label: 'Export JSON', onClick: () => exportToJSON(formData), className: 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400' },
-      { label: 'Export as CSV', onClick: () => exportToCSV(formData), className: 'bg-green-600 hover:bg-green-700 focus:ring-green-500' },
-      { label: 'Export as Excel', onClick: () => exportToXLSX(formData), className: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' },
-      { label: 'Export as PDF', onClick: () => exportToPDF(formData), className: 'bg-red-600 hover:bg-red-700 focus:ring-red-500' },
-  ];
+    }, [isInvoiceAddressSame, formData.address, formData.cityAndState, formData.postCode, formData.country]);
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <header className="flex items-start justify-between mb-6 pb-4 border-b">
-          <div className="flex items-center">
-            <svg className="w-16 h-16 text-red-600 mr-4" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M50 100C77.6142 100 100 77.6142 100 50C100 22.3858 77.61
+
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        
+        const finalValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: finalValue,
+        }));
+    }, []);
+
+    const handleSameAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setIsInvoiceAddressSame(e.target.checked);
+    };
+
+    const handleExport = (format: 'csv' | 'json' | 'xlsx' | 'pdf') => {
+        switch (format) {
+            case 'csv':
+                exportToCSV(formData);
+                break;
+            case 'json':
+                exportToJSON(formData);
+                break;
+            case 'xlsx':
+                exportToXLSX(formData);
+                break;
+            case 'pdf':
+                exportToPDF(formData, logoBase64Ref.current);
+                break;
+        }
+    };
+    
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const json = event.target?.result;
+                if (typeof json === 'string') {
+                    const importedData = JSON.parse(json);
+                    setFormData({ ...initialFormData, ...importedData });
+                    alert('Data imported successfully!');
+                }
+            } catch (error) {
+                console.error("Failed to parse JSON file:", error);
+                alert('Failed to import data. Please check if the file is a valid JSON.');
+            }
+        };
+        reader.onerror = (error) => {
+             console.error("Failed to read file:", error);
+             alert('Failed to read the selected file.');
+        };
+        reader.readAsText(file);
+        
+        e.target.value = ''; 
+    };
+
+    const statusColorClass = formData.status === 'New' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+
+    return (
+        <div className="container mx-auto p-8 bg-gray-100 font-sans">
+            <main className="bg-white p-8 rounded-lg shadow-2xl">
+                 <header className="flex items-center justify-between mb-8 pb-4 border-b">
+                    <div className="flex items-center">
+                        <img src={constants.logoBase64} alt="Red2Roast Logo" className="h-12 w-12 mr-4" />
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-800">Partner Onboarding Form</h1>
+                            <p className="text-sm text-gray-500">A digital version of the Red2Roast Partner Card</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center">
+                        <label htmlFor="status" className="mr-2 font-semibold text-sm text-gray-600">Status:</label>
+                        <select
+                            id="status"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            className={`py-1 px-3 border border-gray-300 rounded-full text-sm font-semibold shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ${statusColorClass}`}
+                        >
+                            <option value="New">New</option>
+                            <option value="Update">Update</option>
+                        </select>
+                    </div>
+                </header>
+
+                <form onSubmit={(e) => e.preventDefault()}>
+                    <Section title="To be completed by Red2Roast">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <InputField label="Date" name="date" type="date" value={formData.date} onChange={handleChange} required />
+                            <SelectField 
+                                label="Request By"
+                                name="requestBy"
+                                value={formData.requestBy}
+                                onChange={handleChange}
+                                options={[
+                                    { value: 'Gert-Jan Dokter', label: 'Gert-Jan Dokter' },
+                                    { value: 'Jan Paul Douma', label: 'Jan Paul Douma' }
+                                ]}
+                            />
+                             <SelectField 
+                                label="Role"
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                options={[
+                                    { value: 'debtor', label: 'Debtor' },
+                                    { value: 'creditor', label: 'Creditor' }
+                                ]}
+                            />
+                        </div>
+                    </Section>
+
+                    <Section title="To be completed by Debtor / Creditor">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                            <div className="space-y-4">
+                                <InputField label="Company Name" name="companyName" value={formData.companyName} onChange={handleChange} required />
+                                <InputField label="Address" name="address" value={formData.address} onChange={handleChange} required />
+                                <InputField label="City and State" name="cityAndState" value={formData.cityAndState} onChange={handleChange} required />
+                                <InputField label="Post Code" name="postCode" value={formData.postCode} onChange={handleChange} required />
+                                <InputField label="Country" name="country" value={formData.country} onChange={handleChange} required />
+                                <InputField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+                                <InputField label="Website" name="website" value={formData.website} onChange={handleChange} />
+                            </div>
+                            <div className="space-y-4 bg-blue-50 p-4 rounded-md border border-blue-200">
+                                 <CheckboxField
+                                    label="Invoice address is same as company address"
+                                    name="isInvoiceAddressSame"
+                                    checked={isInvoiceAddressSame}
+                                    onChange={handleSameAddressChange}
+                                />
+                                <InputField label="Invoice Address" name="invoiceAddress" value={formData.invoiceAddress} onChange={handleChange} disabled={isInvoiceAddressSame} />
+                                <InputField label="Invoice City and State" name="invoiceCityAndState" value={formData.invoiceCityAndState} onChange={handleChange} disabled={isInvoiceAddressSame} />
+                                <InputField label="Invoice Post Code" name="invoicePostCode" value={formData.invoicePostCode} onChange={handleChange} disabled={isInvoiceAddressSame} />
+                                <InputField label="Invoice Country" name="invoiceCountry" value={formData.invoiceCountry} onChange={handleChange} disabled={isInvoiceAddressSame} />
+                                <InputField label="Invoice Language" name="invoiceLanguage" value={formData.invoiceLanguage} onChange={handleChange} />
+                                <InputField label="Default Currency" name="defaultCurrency" value={formData.defaultCurrency} onChange={handleChange} />
+                            </div>
+                        </div>
+
+                        <ContactSection title="Contact General" type="general" formData={formData} handleChange={handleChange} />
+                        <ContactSection title="Contact Finance" type="finance" formData={formData} handleChange={handleChange} />
+                    </Section>
+                    
+                    <Section title="Financial Information">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                            <div className="space-y-4">
+                                 <InputField label="VAT Number (if applicable)" name="vatNo" value={formData.vatNo} onChange={handleChange} />
+                                 <InputField label="Company Registration Number" name="companyRegNo" value={formData.companyRegNo} onChange={handleChange} />
+                                 <RadioGroupWithInput namePrefix="eoriOrEin" options={[{value: 'eori', label: 'EORI Number (EU)'}, {value: 'ein', label: 'EIN Number (US)'}]} formData={formData} handleChange={handleChange} />
+                            </div>
+                            <div className="space-y-4 bg-blue-50 p-4 rounded-md border border-blue-200">
+                                <h3 className="text-md font-semibold text-gray-700">Bank Details</h3>
+                                <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleChange} />
+                                <InputField label="Account Name" name="accountName" value={formData.accountName} onChange={handleChange} />
+                                <InputField label="Bank Address" name="bankAddress" value={formData.bankAddress} onChange={handleChange} />
+                                <RadioGroupWithInput namePrefix="accountIdentifier" options={[{value: 'accountNo', label: 'Account Number'}, {value: 'iban', label: 'IBAN'}]} formData={formData} handleChange={handleChange} />
+                                <RadioGroupWithInput namePrefix="swiftOrBic" options={[{value: 'swift', label: 'Swift Code'}, {value: 'bic', label: 'BIC'}]} formData={formData} handleChange={handleChange} />
+                                <RadioGroupWithInput namePrefix="sortOrRouting" options={[{value: 'sort', label: 'Sort Code'}, {value: 'routing', label: 'Routing Number (ACH/Wire)'}]} formData={formData} handleChange={handleChange} />
+                            </div>
+                        </div>
+                    </Section>
+
+                    <Section title="Credit Information">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <InputField label="Requested Credit Limit" name="requestedCreditLimit" value={formData.requestedCreditLimit} onChange={handleChange} />
+                            <InputField label="Requested Payment Terms" name="requestedPaymentTerms" value={formData.requestedPaymentTerms} onChange={handleChange} />
+                        </div>
+                    </Section>
+                    
+                    <Section title="To be completed by Red2Roast (Internal)">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <CheckboxField label="POA" name="poa" checked={formData.poa} onChange={handleChange} />
+                            <CheckboxField label="Scope" name="scope" checked={formData.scope} onChange={handleChange} />
+                            <CheckboxField label="GDPR" name="gdpr" checked={formData.gdpr} onChange={handleChange} />
+                            <CheckboxField label="Credit" name="credit" checked={formData.credit} onChange={handleChange} />
+                            <CheckboxField label="Company Registration" name="companyRegistration" checked={formData.companyRegistration} onChange={handleChange} />
+                            <CheckboxField label="Passport" name="passport" checked={formData.passport} onChange={handleChange} />
+                            <CheckboxField label="Signed Quote" name="signedQuote" checked={formData.signedQuote} onChange={handleChange} />
+                            <CheckboxField label="Highrise" name="highrise" checked={formData.highrise} onChange={handleChange} />
+                            <CheckboxField label="Credit Check" name="creditCheck" checked={formData.creditCheck} onChange={handleChange} />
+                            <CheckboxField label="IT" name="it" checked={formData.it} onChange={handleChange} />
+                            <CheckboxField label="Exact" name="exact" checked={formData.exact} onChange={handleChange} />
+                            <CheckboxField label="Bank" name="bank" checked={formData.bank} onChange={handleChange} />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <InputField label="Debtor No Scope" name="debtorNoScope" value={formData.debtorNoScope} onChange={handleChange} />
+                            <InputField label="Creditor No Scope" name="creditorNoScope" value={formData.creditorNoScope} onChange={handleChange} />
+                        </div>
+                    </Section>
+
+                    <Section title="Agreement">
+                         <div className="space-y-4">
+                            <label htmlFor="remarks" className="mb-1 text-sm font-semibold text-gray-700">Remarks</label>
+                            <textarea
+                                id="remarks"
+                                name="remarks"
+                                value={formData.remarks}
+                                onChange={handleChange}
+                                rows={4}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <InputField label="Agreement Date" name="agreementDate" type="date" value={formData.agreementDate} onChange={handleChange} />
+                            <InputField label="Signature" name="signature" value={formData.signature} onChange={handleChange} />
+                        </div>
+                    </Section>
+                </form>
+
+                <div className="mt-8 pt-6 border-t flex justify-end space-x-4">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept=".json"
+                        className="hidden"
+                    />
+                    <button onClick={handleImportClick} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600 transition-colors shadow-md">Import JSON</button>
+                    <button onClick={() => handleExport('csv')} className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md">Export CSV</button>
+                    <button onClick={() => handleExport('json')} className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-md">Export JSON</button>
+                    <button onClick={() => handleExport('xlsx')} className="bg-yellow-500 text-white px-5 py-2 rounded-lg hover:bg-yellow-600 transition-colors shadow-md">Export XLSX</button>
+                    <button onClick={() => handleExport('pdf')} className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-colors shadow-md">Export PDF</button>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default App;

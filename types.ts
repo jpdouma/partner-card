@@ -1,7 +1,10 @@
 export interface FormData {
+  // Header Status
+  status: 'New' | 'Update';
+
   // Red2Roast Section
   date: string;
-  requestBy: string;
+  requestBy: 'Gert-Jan Dokter' | 'Jan Paul Douma';
   role: 'debtor' | 'creditor';
   
   // Debtor/Creditor Section
@@ -37,8 +40,8 @@ export interface FormData {
   // Financial Info
   vatNo: string;
   companyRegNo: string;
-  eoriOrEin: 'eori' | 'ein';
-  eoriNo: string;
+  eoriOrEinType: 'eori' | 'ein';
+  eoriOrEinValue: string;
   bankName: string;
   accountName: string;
   bankAddress: string;
