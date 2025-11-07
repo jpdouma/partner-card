@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FormData } from './types';
 import { exportToCSV, exportToPDF, exportToXLSX } from './services/exportService';
 
@@ -145,6 +145,36 @@ const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [status, setStatus] = useState<'New' | 'Update'>('New');
   const [isInvoiceAddressSame, setInvoiceAddressSame] = useState(false);
+  
+  // Load saved data from localStorage on initial render
+  useEffect(() => {
+    const savedData = localStorage.getItem('partnerFormData');
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
+  }, []);
+
+  const handleSave = useCallback(() => {
+    localStorage.setItem('partnerFormData', JSON.stringify(formData));
+    alert('Form data saved!');
+  }, [formData]);
+
+  // Add keyboard shortcut for saving
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+        event.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleSave]);
+
 
   useEffect(() => {
     if (isInvoiceAddressSame) {
@@ -184,6 +214,15 @@ const App: React.FC = () => {
             invoicePostCode: '',
             invoiceCountry: '',
         }));
+    }
+  };
+
+  const handleClear = () => {
+    if (window.confirm('Are you sure you want to clear the form? This action will also remove any saved data.')) {
+      setFormData(initialFormData);
+      setStatus('New');
+      setInvoiceAddressSame(false);
+      localStorage.removeItem('partnerFormData');
     }
   };
 
@@ -346,7 +385,7 @@ const App: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
                 <div className="space-y-4">
                     <InputField label="VAT Number (if applicable)" name="vatNo" value={formData.vatNo} onChange={handleChange} />
-                    <InputField label="Company Reg No" name="companyRegNo" value={formData.companyRegNo} onChange={handleChange} />
+                    <InputField label="Company Registration Number" name="companyRegNo" value={formData.companyRegNo} onChange={handleChange} />
                     <div>
                       <label className="mb-1 text-sm font-semibold text-gray-700 block">EORI No (EU) / EIN No (US)</label>
                       <div className="flex items-center space-x-4 mt-1 mb-2">
@@ -472,6 +511,18 @@ const App: React.FC = () => {
         
         {/* Action Buttons */}
         <footer className="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-center gap-4 sticky bottom-0 bg-white/80 backdrop-blur-sm py-4 -mb-8 -mx-8 px-8 rounded-b-xl">
+            <button
+              onClick={handleSave}
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+            >
+              Save Progress
+            </button>
+            <button
+              onClick={handleClear}
+              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
+            >
+              Clear Form
+            </button>
             <button
               onClick={() => exportToCSV(formData)}
               className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"

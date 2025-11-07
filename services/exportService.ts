@@ -38,7 +38,8 @@ export const exportToXLSX = (data: FormData) => {
 
     // --- Helper Functions ---
     const addCell = (addr: string, value: any, style: any = {}) => {
-        ws[addr] = { t: 's', v: value, s: style };
+        // Ensure value is a string to avoid issues with xlsx library
+        ws[addr] = { t: 's', v: String(value ?? ''), s: style };
     };
     const mergeCells = (startAddr: string, endAddr: string) => {
         merges.push({ s: XLSX.utils.decode_cell(startAddr), e: XLSX.utils.decode_cell(endAddr) });
@@ -211,6 +212,8 @@ export const exportToXLSX = (data: FormData) => {
 
     // --- Finalize and Download ---
     ws['!merges'] = merges;
+    // Set the valid range for the worksheet, otherwise it may appear blank
+    ws['!ref'] = 'A1:M95'; 
     ws['!cols'] = [
         { wch: 2 }, { wch: 15 }, { wch: 5 }, { wch: 15 }, { wch: 5 }, { wch: 15 }, 
         { wch: 5 }, { wch: 15 }, { wch: 15 }, { wch: 5 }, { wch: 15 }, { wch: 5 }, { wch: 15 }
