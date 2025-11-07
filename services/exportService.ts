@@ -13,9 +13,14 @@ const downloadFile = (blob: Blob, filename: string) => {
 };
 
 const createFilename = (base: string, companyName: string | undefined, date: string | undefined, extension: string) => {
-    const namePart = companyName?.trim() ? ` ${companyName.trim()}` : '';
-    const datePart = date?.trim() ? ` ${date.trim()}` : '';
-    return `${base}${namePart}${datePart}.${extension}`;
+    const parts = [base];
+    if (companyName?.trim()) {
+        parts.push(companyName.trim());
+    }
+    if (date?.trim()) {
+        parts.push(date.trim());
+    }
+    return `${parts.join(' ')}.${extension}`;
 }
 
 export const exportToCSV = (data: FormData) => {
@@ -28,18 +33,198 @@ export const exportToCSV = (data: FormData) => {
 };
 
 export const exportToXLSX = (data: FormData) => {
-  const worksheetData = Object.entries(data).map(([key, value]) => ({
-    Field: key,
-    Value: value,
-  }));
-  const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Partner Data');
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-  const filename = createFilename('Partner Card', data.companyName, data.date, 'xlsx');
-  downloadFile(blob, filename);
+    const ws: { [key: string]: any } = {};
+    const merges: any[] = [];
+
+    // --- Helper Functions ---
+    const addCell = (addr: string, value: any, style: any = {}) => {
+        ws[addr] = { t: 's', v: value, s: style };
+    };
+    const mergeCells = (startAddr: string, endAddr: string) => {
+        merges.push({ s: XLSX.utils.decode_cell(startAddr), e: XLSX.utils.decode_cell(endAddr) });
+    };
+
+    // --- Styles ---
+    const border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+    const boldFont = { font: { bold: true } };
+    const centerAlign = { alignment: { horizontal: 'center' } };
+    const greyFill = { fill: { fgColor: { rgb: "E0E0E0" } } };
+    const blueFill = { fill: { fgColor: { rgb: "B0E0E6" } } };
+    const yellowFill = { fill: { fgColor: { rgb: "FFFF00" } } };
+
+    const valueStyle = { border };
+    const blueValueStyle = { border, ...blueFill };
+    const yellowValueStyle = { border, ...yellowFill };
+    const sectionStyle = { ...boldFont, ...centerAlign, ...greyFill };
+    
+    // --- Populate Worksheet ---
+
+    // Title & Header
+    addCell('E1', 'Red2Roast Partner Card', { font: { bold: true, sz: 16 }, alignment: { horizontal: 'center' } });
+    mergeCells('E1', 'I2');
+    addCell('E3', 'To be completed by Red2Roast', sectionStyle);
+    mergeCells('E3', 'I4');
+
+    // Red2Roast Section
+    addCell('E5', 'Date:');
+    addCell('F5', data.date, valueStyle); mergeCells('F5', 'G5');
+    addCell('E7', 'Request By:');
+    addCell('F7', data.requestBy, valueStyle); mergeCells('F7', 'G7');
+    addCell('E9', 'Role:');
+    addCell('F9', data.role === 'debtor' ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('G9', 'Debtor');
+    addCell('H9', data.role === 'creditor' ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('I9', 'Creditor');
+
+    // Debtor/Creditor Section Header
+    addCell('B16', 'To be completed by Debtor / Creditor', sectionStyle);
+    mergeCells('B16', 'M17');
+
+    // Debtor/Creditor Info
+    addCell('B18', 'Company Name:');
+    addCell('D18', data.companyName, valueStyle); mergeCells('D18', 'H19');
+    addCell('B20', 'Address:');
+    addCell('D20', data.address, valueStyle); mergeCells('D20', 'H21');
+    addCell('B22', 'City and State:');
+    addCell('D22', data.cityAndState, valueStyle); mergeCells('D22', 'H23');
+    addCell('B24', 'Post Code:');
+    addCell('D24', data.postCode, valueStyle); mergeCells('D24', 'H25');
+    addCell('B26', 'Country:');
+    addCell('D26', data.country, valueStyle); mergeCells('D26', 'H27');
+    addCell('B28', 'Phone:');
+    addCell('D28', data.phone, valueStyle); mergeCells('D28', 'H29');
+    addCell('B30', 'Website:');
+    addCell('D30', data.website, valueStyle); mergeCells('D30', 'H31');
+
+    // Invoice Info
+    addCell('I18', 'Invoice Address (If Other):');
+    addCell('K18', data.invoiceAddress, blueValueStyle); mergeCells('K18', 'M21');
+    addCell('I22', 'City and State:');
+    addCell('K22', data.invoiceCityAndState, blueValueStyle); mergeCells('K22', 'M23');
+    addCell('I24', 'Post Code:');
+    addCell('K24', data.invoicePostCode, blueValueStyle); mergeCells('K24', 'M25');
+    addCell('I26', 'Country:');
+    addCell('K26', data.invoiceCountry, blueValueStyle); mergeCells('K26', 'M27');
+    addCell('I28', 'Invoice Language:');
+    addCell('K28', data.invoiceLanguage, valueStyle); mergeCells('K28', 'M29');
+    addCell('I30', 'Default Currency:');
+    addCell('K30', data.defaultCurrency, valueStyle); mergeCells('K30', 'M31');
+    
+    // Contact General
+    addCell('B32', 'Contact general :', boldFont);
+    addCell('B34', 'Name:');
+    addCell('D34', data.generalName, valueStyle); mergeCells('D34', 'H35');
+    addCell('B36', 'Title:');
+    addCell('D36', data.generalTitle, valueStyle); mergeCells('D36', 'H37');
+    addCell('B38', 'Email:');
+    addCell('D38', data.generalEmail, valueStyle); mergeCells('D38', 'H39');
+    addCell('I34', 'Phone:');
+    addCell('K34', data.generalPhone, valueStyle); mergeCells('K34', 'M35');
+    addCell('I36', 'Mobile:');
+    addCell('K36', data.generalMobile, valueStyle); mergeCells('K36', 'M37');
+
+    // Contact Finance
+    addCell('B40', 'Contact Finance:', boldFont);
+    addCell('B42', 'Name:');
+    addCell('D42', data.financeName, valueStyle); mergeCells('D42', 'H43');
+    addCell('B44', 'Title:');
+    addCell('D44', data.financeTitle, valueStyle); mergeCells('D44', 'H45');
+    addCell('B46', 'Email:');
+    addCell('D46', data.financeEmail, valueStyle); mergeCells('D46', 'H47');
+    addCell('I42', 'Phone:');
+    addCell('K42', data.financePhone, valueStyle); mergeCells('K42', 'M43');
+    addCell('I44', 'Mobile:');
+    addCell('K44', data.financeMobile, valueStyle); mergeCells('K44', 'M45');
+
+    // Financial Info
+    addCell('B49', 'VAT No (if applicable):');
+    addCell('D49', data.vatNo, valueStyle); mergeCells('D49', 'H50');
+    addCell('B51', 'Company Reg No:');
+    addCell('D51', data.companyRegNo, valueStyle); mergeCells('D51', 'H52');
+    addCell('B53', 'EORI No (EU) / EIN No (US) :');
+    addCell('D53', data.eoriNo, valueStyle); mergeCells('D53', 'H54');
+    addCell('B55', 'Requested Credit Limit:');
+    addCell('D55', data.requestedCreditLimit, valueStyle); mergeCells('D55', 'H56');
+    addCell('B57', 'Requested Payment Terms:');
+    addCell('D57', data.requestedPaymentTerms, valueStyle); mergeCells('D57', 'H58');
+
+    // Bank Info
+    addCell('I49', 'Bank name:');
+    addCell('K49', data.bankName, blueValueStyle); mergeCells('K49', 'M50');
+    addCell('I51', 'Bank address:');
+    addCell('K51', data.bankAddress, blueValueStyle); mergeCells('K51', 'M52');
+    addCell('I53', 'Account No / IBAN No.:');
+    addCell('K53', data.accountIdentifierValue, blueValueStyle); mergeCells('K53', 'M54');
+    addCell('I55', 'Swift Code / BIC:');
+    addCell('K55', data.swiftOrBicValue, blueValueStyle); mergeCells('K55', 'M56');
+    addCell('I57', 'Sort Code / Routing No (ACH/Wire):');
+    addCell('K57', data.sortOrRoutingValue, blueValueStyle); mergeCells('K57', 'M58');
+
+    // Second Red2Roast Section
+    addCell('B61', 'To be completed by Red2Roast', sectionStyle); mergeCells('B61', 'M62');
+    addCell('B63', 'POA'); addCell('C63', data.poa ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('B64', 'Scope'); addCell('C64', data.scope ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('B65', 'GDPR'); addCell('C65', data.gdpr ? 'X' : '', { ...valueStyle, ...centerAlign });
+
+    addCell('D63', 'Credit'); addCell('E63', data.credit ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('D64', 'Company Reg'); addCell('E64', data.companyRegistration ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('D65', 'Passport'); addCell('E65', data.passport ? 'X' : '', { ...valueStyle, ...centerAlign });
+
+    addCell('F63', 'Signed Quote'); addCell('G63', data.signedQuote ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('F64', 'Highrise'); addCell('G64', data.highrise ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('F65', 'Credit check'); addCell('G65', data.creditCheck ? 'X' : '', { ...valueStyle, ...centerAlign });
+    
+    addCell('H63', 'IT'); addCell('I63', data.it ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('H64', 'Exact'); addCell('I64', data.exact ? 'X' : '', { ...valueStyle, ...centerAlign });
+    addCell('H65', 'Bank'); addCell('I65', data.bank ? 'X' : '', { ...valueStyle, ...centerAlign });
+    
+    addCell('J63', 'Check'); addCell('K63', '', { ...valueStyle, ...centerAlign });
+
+    addCell('B67', 'Debtor No Scope:');
+    addCell('D67', data.debtorNoScope, yellowValueStyle); mergeCells('D67', 'H68');
+    addCell('I67', 'Creditor No Scope:');
+    addCell('K67', data.creditorNoScope, yellowValueStyle); mergeCells('K67', 'M68');
+    
+    // Empty Shipment section
+    addCell('B69', 'Expected Type, Direction & Number of Shipments, Per Week / Month / Year:', boldFont); mergeCells('B69', 'M70');
+    addCell('C71', 'Select', valueStyle); mergeCells('C71', 'D71');
+    addCell('E71', 'Select', valueStyle); mergeCells('E71', 'F71');
+    addCell('G71', 'Select', valueStyle); mergeCells('G71', 'H71');
+    addCell('I71', '', yellowValueStyle); mergeCells('I71', 'M72');
+    addCell('C73', 'Select', valueStyle); mergeCells('C73', 'D73');
+    addCell('E73', 'Select', valueStyle); mergeCells('E73', 'F73');
+    addCell('G73', 'Select', valueStyle); mergeCells('G73', 'H73');
+    addCell('I73', '', yellowValueStyle); mergeCells('I73', 'M74');
+    addCell('C75', 'Select', valueStyle); mergeCells('C75', 'D75');
+    addCell('E75', 'Select', valueStyle); mergeCells('E75', 'F75');
+    addCell('G75', 'Select', valueStyle); mergeCells('G75', 'H75');
+    addCell('I75', '', yellowValueStyle); mergeCells('I75', 'M76');
+
+    // Remarks & Agreement
+    addCell('B78', 'Remarks:');
+    addCell('D78', data.remarks, { ...valueStyle, alignment: { wrapText: true } }); mergeCells('D78', 'M84');
+    addCell('B86', 'Agreement Mgmt:', boldFont);
+    addCell('B88', 'Date:');
+    addCell('D88', data.agreementDate, valueStyle); mergeCells('D88', 'H89');
+    addCell('I88', 'Signature:');
+    addCell('K88', data.signature, valueStyle); mergeCells('K88', 'M89');
+
+    // --- Finalize and Download ---
+    ws['!merges'] = merges;
+    ws['!cols'] = [
+        { wch: 2 }, { wch: 15 }, { wch: 5 }, { wch: 15 }, { wch: 5 }, { wch: 15 }, 
+        { wch: 5 }, { wch: 15 }, { wch: 15 }, { wch: 5 }, { wch: 15 }, { wch: 5 }, { wch: 15 }
+    ];
+    ws['!rows'] = Array.from({length: 95}, () => ({ hpt: 15 })); // Default row height
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, ws, 'Partner Card');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    const filename = createFilename('Partner Card', data.companyName, data.date, 'xlsx');
+    downloadFile(blob, filename);
 };
+
 
 export const exportToPDF = (data: FormData) => {
   const { jsPDF } = jspdf;
