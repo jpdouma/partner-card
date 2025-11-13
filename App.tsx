@@ -197,7 +197,7 @@ const initialFormData: FormData = {
 Object.freeze(initialFormData); // Make the initial state truly immutable
 
 const constants = {
-  logoBase64: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNDQjI4MjgiLz4KPHBhdGggZD0iTTIyLjUgMzVWMTcuNUgyNS41VjM1TTIyLjUgMTIuNVY5LjVIMjUuNVYxMi41SDIyLjVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'
+  logoBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABdklEQVR4Xu2ZsQ3DMAxF3QiYSUiYQUiYQUiYSUiYQUiYQZCEkYQJSBigspRIkmy/yj/gKo4i/Xl2N5Nn//w4dHx8vGehYJWjRjO2ADsA+wB7AIeS3kQwykLgVwJshh3gI8B3gG+S3gwyloVgr8BuhgP8DPAZ4DOkNwN5pgywFphhL8B3gC8B3iS9GWSsYcBugm07gP8AfgZ8lvRmkLHGA7sJtq0D/gX4GfBb0ptBhhq9gG3bBH8A/gx4LelNIEOtfsBubBP8Dfgy4PekN4EMtbEB2AfsAZySvA1kLGEGsAqwgH8Cfkp6M8hYwgRgicAC/gX4KelNIWMJE4AlAAv4L8BPSW8KGUsYASwDWMAfgb8lvSlkLGEAsARgAf8E/Jb0ppCxho3AagCL+A3gp6Q3hYw1bgBWAFjAbwE/Jb0pZKwBHsBWgAX8NvBT0ptCxgresAF2AzYAW5LeDTKWEA5YBDgAWJL0bpCxBOGAOcABwJOkdwMZYwE/AYy3x8fH++ce/wBfqpdnNnS2AAAAAABJRU5ErkJggg=='
 };
 
 // ==================================================================================

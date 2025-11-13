@@ -244,8 +244,7 @@ export const exportToXLSX = (data: FormData) => {
 
 
 export const exportToPDF = (data: FormData, logoBase64: string) => {
-  const { jsPDF } = jspdf;
-  const doc = new jsPDF('p', 'pt', 'a4');
+  const doc = new jspdf.jsPDF('p', 'pt', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
   let y = margin;
