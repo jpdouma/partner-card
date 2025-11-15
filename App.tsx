@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FormData } from './types';
 import { exportToCSV, exportToPDF, exportToXLSX, exportToJSON } from './services/exportService';
@@ -196,10 +197,6 @@ const initialFormData: FormData = {
 };
 Object.freeze(initialFormData); // Make the initial state truly immutable
 
-const constants = {
-  logoBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABdklEQVR4Xu2ZsQ3DMAxF3QiYSUiYQUiYQUiYSUiYQUiYQZCEkYQJSBigspRIkmy/yj/gKo4i/Xl2N5Nn//w4dHx8vGehYJWjRjO2ADsA+wB7AIeS3kQwykLgVwJshh3gI8B3gG+S3gwyloVgr8BuhgP8DPAZ4DOkNwN5pgywFphhL8B3gC8B3iS9GWSsYcBugm07gP8AfgZ8lvRmkLHGA7sJtq0D/gX4GfBb0ptBhhq9gG3bBH8A/gx4LelNIEOtfsBubBP8Dfgy4PekN4EMtbEB2AfsAZySvA1kLGEGsAqwgH8Cfkp6M8hYwgRgicAC/gX4KelNIWMJE4AlAAv4L8BPSW8KGUsYASwDWMAfgb8lvSlkLGEAsARgAf8E/Jb0ppCxho3AagCL+A3gp6Q3hYw1bgBWAFjAbwE/Jb0pZKwBHsBWgAX8NvBT0ptCxgresAF2AzYAW5LeDTKWEA5YBDgAWJL0bpCxBOGAOcABwJOkdwMZYwE/AYy3x8fH++ce/wBfqpdnNnS2AAAAAABJRU5ErkJggg=='
-};
-
 // ==================================================================================
 //
 //  MAIN APP COMPONENT
@@ -210,7 +207,6 @@ const constants = {
 const App: React.FC = () => {
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const [isInvoiceAddressSame, setIsInvoiceAddressSame] = useState(false);
-    const logoBase64Ref = useRef(constants.logoBase64);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -260,7 +256,7 @@ const App: React.FC = () => {
                 exportToXLSX(formData);
                 break;
             case 'pdf':
-                exportToPDF(formData, logoBase64Ref.current);
+                exportToPDF(formData);
                 break;
         }
     };
@@ -302,12 +298,9 @@ const App: React.FC = () => {
         <div className="container mx-auto p-8 bg-gray-100 font-sans">
             <main className="bg-white p-8 rounded-lg shadow-2xl">
                  <header className="flex items-center justify-between mb-8 pb-4 border-b">
-                    <div className="flex items-center">
-                        <img src={constants.logoBase64} alt="Red2Roast Logo" className="h-12 w-12 mr-4" />
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Partner Onboarding Form</h1>
-                            <p className="text-sm text-gray-500">A digital version of the Red2Roast Partner Card</p>
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Partner Onboarding Form</h1>
+                        <p className="text-sm text-gray-500">A digital version of the Red2Roast Partner Card</p>
                     </div>
                     <div className="flex items-center">
                         <label htmlFor="status" className="mr-2 font-semibold text-sm text-gray-600">Status:</label>
@@ -373,8 +366,26 @@ const App: React.FC = () => {
                                 <InputField label="Invoice City and State" name="invoiceCityAndState" value={formData.invoiceCityAndState} onChange={handleChange} disabled={isInvoiceAddressSame} />
                                 <InputField label="Invoice Post Code" name="invoicePostCode" value={formData.invoicePostCode} onChange={handleChange} disabled={isInvoiceAddressSame} />
                                 <InputField label="Invoice Country" name="invoiceCountry" value={formData.invoiceCountry} onChange={handleChange} disabled={isInvoiceAddressSame} />
-                                <InputField label="Invoice Language" name="invoiceLanguage" value={formData.invoiceLanguage} onChange={handleChange} />
-                                <InputField label="Default Currency" name="defaultCurrency" value={formData.defaultCurrency} onChange={handleChange} />
+                                <SelectField 
+                                    label="Invoice Language" 
+                                    name="invoiceLanguage" 
+                                    value={formData.invoiceLanguage} 
+                                    onChange={handleChange}
+                                    options={[
+                                        { value: 'English', label: 'English' },
+                                        { value: 'Dutch', label: 'Dutch' },
+                                    ]}
+                                />
+                                <SelectField
+                                    label="Default Currency"
+                                    name="defaultCurrency"
+                                    value={formData.defaultCurrency}
+                                    onChange={handleChange}
+                                    options={[
+                                        { value: 'United States Dollars (USD)', label: 'United States Dollars (USD)' },
+                                        { value: 'Euros (EUR)', label: 'Euros (EUR)' },
+                                    ]}
+                                />
                             </div>
                         </div>
 

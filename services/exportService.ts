@@ -243,8 +243,9 @@ export const exportToXLSX = (data: FormData) => {
 };
 
 
-export const exportToPDF = (data: FormData, logoBase64: string) => {
-  const doc = new jspdf.jsPDF('p', 'pt', 'a4');
+export const exportToPDF = (data: FormData) => {
+  const { jsPDF } = jspdf;
+  const doc = new jsPDF('p', 'pt', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
   let y = margin;
@@ -290,11 +291,8 @@ export const exportToPDF = (data: FormData, logoBase64: string) => {
   // Header
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  if (logoBase64) {
-      doc.addImage(logoBase64, 'PNG', margin, y - 10, 40, 40);
-  }
-  doc.text('Red2Roast Partner Card', pageWidth / 2, y + 15, { align: 'center' });
-  y += 50;
+  doc.text('Red2Roast Partner Card', pageWidth / 2, y, { align: 'center' });
+  y += 40;
 
 
   // Red2Roast Section
