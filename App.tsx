@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FormData } from './types';
 import { exportToCSV, exportToPDF, exportToXLSX, exportToJSON } from './services/exportService';
@@ -207,6 +208,8 @@ Object.freeze(initialFormData); // Make the initial state truly immutable
 const App: React.FC = () => {
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const [isInvoiceAddressSame, setIsInvoiceAddressSame] = useState(false);
+    //- Fix: Add state for logo to be used in PDF export.
+    const [logo, setLogo] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -256,7 +259,8 @@ const App: React.FC = () => {
                 exportToXLSX(formData);
                 break;
             case 'pdf':
-                exportToPDF(formData);
+                //- Fix: Pass the logo state to the exportToPDF function.
+                exportToPDF(formData, logo);
                 break;
         }
     };
@@ -292,17 +296,48 @@ const App: React.FC = () => {
         e.target.value = ''; 
     };
 
+    //- Fix: Add handler for logo image upload.
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogo(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setLogo(null);
+            if(file) alert('Please upload a valid image file (PNG, JPG, etc.).');
+        }
+    };
+
     const statusColorClass = formData.status === 'New' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
 
     return (
         <div className="container mx-auto p-8 bg-gray-100 font-sans">
             <main className="bg-white p-8 rounded-lg shadow-2xl">
+                 {/*- Fix: Update header to include logo upload UI and display.*/}
                  <header className="flex items-center justify-between mb-8 pb-4 border-b">
-                    <div>
+                    <div className="flex-1">
                         <h1 className="text-2xl font-bold text-gray-800">Partner Onboarding Form</h1>
                         <p className="text-sm text-gray-500">A digital version of the Red2Roast Partner Card</p>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center space-x-4">
+                        {logo && <img src={logo} alt="Uploaded Logo" className="h-12 border rounded p-1" />}
+                         <input
+                            type="file"
+                            id="logo-upload"
+                            className="hidden"
+                            accept="image/png, image/jpeg"
+                            onChange={handleLogoUpload}
+                        />
+                        <button
+                            onClick={() => document.getElementById('logo-upload')?.click()}
+                            className="bg-white text-gray-700 px-4 py-2 border rounded-lg hover:bg-gray-100 transition-colors shadow-sm"
+                        >
+                            {logo ? 'Change Logo' : 'Upload Logo'}
+                        </button>
+                        <div className="h-10 border-l mx-2"></div>
                         <label htmlFor="status" className="mr-2 font-semibold text-sm text-gray-600">Status:</label>
                         <select
                             id="status"
