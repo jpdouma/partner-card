@@ -82,18 +82,19 @@ export const exportToPDF = async (data: FormData, logoBase64: string | null) => 
   };
 
   const addKeyValue = (key: string, value: string, offsetX = 0) => {
-      if (!value && typeof value !== 'boolean') return;
-      const keyY = y;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.text(`${key}:`, margin + offsetX, keyY);
-      
-      doc.setFont('helvetica', 'normal');
-      const valueLines = doc.splitTextToSize(String(value), pageWidth / 2 - margin * 1.5);
-      doc.text(valueLines, margin + 120 + offsetX, keyY);
-      
-      const lineHeight = 10 * 1.15;
-      y += (valueLines.length * lineHeight) + 5;
+    const keyY = y;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(`${key}:`, margin + offsetX, keyY);
+    
+    doc.setFont('helvetica', 'normal');
+    // Use nullish coalescing to handle null/undefined without printing "null"
+    const valueLines = doc.splitTextToSize(String(value ?? ''), pageWidth / 2 - margin * 1.5);
+    doc.text(valueLines, margin + 120 + offsetX, keyY);
+    
+    const lineHeight = 10 * 1.15;
+    // Advance Y by at least one line for the key, or more if the value is multi-line.
+    y += (valueLines.length * lineHeight) + 5;
   };
   
   // Red2Roast Section
