@@ -82,7 +82,7 @@ export const exportToPDF = async (data: FormData, logoBase64: string | null) => 
   };
 
   const addKeyValue = (key: string, value: string, offsetX = 0) => {
-      if (!value) return;
+      if (!value && typeof value !== 'boolean') return;
       const keyY = y;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
@@ -175,6 +175,48 @@ export const exportToPDF = async (data: FormData, logoBase64: string | null) => 
   addSectionHeader('Credit Information');
   addKeyValue('Requested Credit Limit', data.requestedCreditLimit);
   addKeyValue('Requested Payment Terms', data.requestedPaymentTerms);
+
+  // Red2Roast Internal Section
+  addSectionHeader('To be completed by Red2Roast (Internal)');
+  
+  const addCheckboxSimple = (label: string, checked: boolean, x: number, currentY: number) => {
+      const text = checked ? '[X]' : '[ ]';
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`${text} ${label}`, x, currentY);
+  };
+  
+  const checkboxCols = [
+      [{ label: 'POA', key: 'poa' }, { label: 'Company Registration', key: 'companyRegistration' }, { label: 'Credit Check', key: 'creditCheck' }],
+      [{ label: 'Scope', key: 'scope' }, { label: 'Passport', key: 'passport' }, { label: 'IT', key: 'it' }],
+      [{ label: 'GDPR', key: 'gdpr' }, { label: 'Signed Quote', key: 'signedQuote' }, { label: 'Exact', key: 'exact' }],
+      [{ label: 'Credit', key: 'credit' }, { label: 'Highrise', key: 'highrise' }, { label: 'Bank', key: 'bank' }]
+  ];
+
+  let startY = y;
+  let colX = margin;
+  const colGap = 130;
+
+  for (let i = 0; i < checkboxCols.length; i++) {
+      colX = margin + i * colGap;
+      y = startY;
+      for (const item of checkboxCols[i]) {
+          const key = item.key as keyof FormData;
+          addCheckboxSimple(item.label, Boolean((data as any)[key]), colX, y);
+          y += 20;
+      }
+  }
+  y = startY + 3 * 20; 
+  y += 10; 
+
+  addKeyValue('Debtor No Scope', data.debtorNoScope);
+  addKeyValue('Creditor No Scope', data.creditorNoScope);
+  
+  // Agreement Section
+  addSectionHeader('Agreement');
+  addKeyValue('Remarks', data.remarks);
+  addKeyValue('Agreement Date', data.agreementDate);
+  addKeyValue('Signature', data.signature);
 
   const jsPdfArrayBuffer = doc.output('arraybuffer');
   
@@ -394,7 +436,6 @@ export const exportToXLSX = (data: FormData) => {
     
     addCell('H65', 'IT'); addCell('I65', data.it ? 'X' : '', { ...valueStyle, ...centerAlign });
     addCell('H66', 'Exact'); addCell('I66', data.exact ? 'X' : '', { ...valueStyle, ...centerAlign });
-//- Fix: Completed the exportToXLSX function which was truncated.
     addCell('H67', 'Bank'); addCell('I67', data.bank ? 'X' : '', { ...valueStyle, ...centerAlign });
 
     addCell('B69', 'Debtor No Scope');
