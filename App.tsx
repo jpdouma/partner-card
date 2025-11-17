@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FormData } from './types';
 import { exportToCSV, exportToPDF, exportToXLSX, exportToJSON } from './services/exportService';
@@ -45,7 +43,7 @@ const InputField: React.FC<InputProps> = ({ label, name, value, onChange, type =
       onChange={onChange}
       required={required}
       disabled={disabled}
-      className={`p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 ${className}`}
+      className={`p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 ${className}`}
     />
   </div>
 );
@@ -69,7 +67,7 @@ const SelectField: React.FC<SelectProps> = ({ label, name, value, onChange, opti
       value={value}
       onChange={onChange}
       required={required}
-      className={`p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition bg-white text-gray-900 ${className}`}
+      className={`p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-gray-900 ${className}`}
     >
       {options.map(option => (
         <option key={option.value} value={option.value}>{option.label}</option>
@@ -93,11 +91,42 @@ const CheckboxField: React.FC<CheckboxProps> = ({ label, name, checked, onChange
             name={name as string}
             checked={checked}
             onChange={onChange}
-            className="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         />
-        <label htmlFor={name as string} className="ml-2 block text-sm text-gray-900">{label}</label>
+        <label htmlFor={name as string} className="ml-2 block text-sm text-gray-900 font-semibold">{label}</label>
     </div>
 );
+
+interface RadioGroupProps {
+  label: string;
+  name: keyof FormData;
+  options: { value: string; label: string }[];
+  selectedValue: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const RadioGroup: React.FC<RadioGroupProps> = ({ label, name, options, selectedValue, onChange }) => (
+    <div>
+        <label className="mb-1 text-sm font-semibold text-gray-700">{label}</label>
+        <div className="flex items-center space-x-4 mt-2">
+            {options.map(({ value, label: optionLabel }) => (
+                <div key={value} className="flex items-center">
+                    <input
+                        type="radio"
+                        id={`${name}-${value}`}
+                        name={name}
+                        value={value}
+                        checked={selectedValue === value}
+                        onChange={onChange}
+                        className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    />
+                    <label htmlFor={`${name}-${value}`} className="ml-2 block text-sm text-gray-900">{optionLabel}</label>
+                </div>
+            ))}
+        </div>
+    </div>
+);
+
 
 interface RadioGroupWithInputProps {
   namePrefix: 'accountIdentifier' | 'swiftOrBic' | 'sortOrRouting' | 'eoriOrEin';
@@ -122,7 +151,7 @@ const RadioGroupWithInput: React.FC<RadioGroupWithInputProps> = ({ namePrefix, o
                             value={value}
                             checked={String(formData[typeName]) === value}
                             onChange={handleChange}
-                            className="h-4 w-4 text-red-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         />
                         <label htmlFor={`${namePrefix}-${value}`} className="ml-2 block text-sm text-gray-900">{label}</label>
                     </div>
@@ -183,7 +212,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ title, type, formData, 
 // ==================================================================================
 
 const initialFormData: FormData = {
-  status: 'New', date: '', requestBy: 'Gert-Jan Dokter', role: 'debtor', companyName: '', address: '',
+  date: '', requestBy: '', role: 'debtor', companyName: '', address: '',
   cityAndState: '', postCode: '', country: '', phone: '', website: '', invoiceAddress: '',
   invoiceCityAndState: '', invoicePostCode: '', invoiceCountry: '', invoiceLanguage: 'English',
   defaultCurrency: 'United States Dollars (USD)', generalName: '', generalTitle: '', generalEmail: '',
@@ -208,7 +237,6 @@ Object.freeze(initialFormData); // Make the initial state truly immutable
 const App: React.FC = () => {
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const [isInvoiceAddressSame, setIsInvoiceAddressSame] = useState(false);
-    //- Fix: Add state for logo to be used in PDF export.
     const [logo, setLogo] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -259,7 +287,6 @@ const App: React.FC = () => {
                 exportToXLSX(formData);
                 break;
             case 'pdf':
-                //- Fix: Pass the logo state to the exportToPDF function.
                 exportToPDF(formData, logo);
                 break;
         }
@@ -296,7 +323,6 @@ const App: React.FC = () => {
         e.target.value = ''; 
     };
 
-    //- Fix: Add handler for logo image upload.
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith('image/')) {
@@ -311,16 +337,13 @@ const App: React.FC = () => {
         }
     };
 
-    const statusColorClass = formData.status === 'New' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-
     return (
         <div className="container mx-auto p-8 bg-gray-100 font-sans">
             <main className="bg-white p-8 rounded-lg shadow-2xl">
-                 {/*- Fix: Update header to include logo upload UI and display.*/}
                  <header className="flex items-center justify-between mb-8 pb-4 border-b">
                     <div className="flex-1">
-                        <h1 className="text-2xl font-bold text-gray-800">Partner Onboarding Form</h1>
-                        <p className="text-sm text-gray-500">A digital version of the Red2Roast Partner Card</p>
+                        <h1 className="text-2xl font-bold text-gray-800">Red2Roast Partner Onboarding Form</h1>
+                        <p className="text-sm text-gray-500">Please complete all relevant sections below.</p>
                     </div>
                     <div className="flex items-center space-x-4">
                         {logo && <img src={logo} alt="Uploaded Logo" className="h-12 border rounded p-1" />}
@@ -337,39 +360,18 @@ const App: React.FC = () => {
                         >
                             {logo ? 'Change Logo' : 'Upload Logo'}
                         </button>
-                        <div className="h-10 border-l mx-2"></div>
-                        <label htmlFor="status" className="mr-2 font-semibold text-sm text-gray-600">Status:</label>
-                        <select
-                            id="status"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className={`py-1 px-3 border border-gray-300 rounded-full text-sm font-semibold shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ${statusColorClass}`}
-                        >
-                            <option value="New">New</option>
-                            <option value="Update">Update</option>
-                        </select>
                     </div>
                 </header>
 
                 <form onSubmit={(e) => e.preventDefault()}>
                     <Section title="To be completed by Red2Roast">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                             <InputField label="Date" name="date" type="date" value={formData.date} onChange={handleChange} required />
-                            <SelectField 
-                                label="Request By"
-                                name="requestBy"
-                                value={formData.requestBy}
-                                onChange={handleChange}
-                                options={[
-                                    { value: 'Gert-Jan Dokter', label: 'Gert-Jan Dokter' },
-                                    { value: 'Jan Paul Douma', label: 'Jan Paul Douma' }
-                                ]}
-                            />
-                             <SelectField 
+                            <InputField label="Request By" name="requestBy" value={formData.requestBy} onChange={handleChange} />
+                            <RadioGroup 
                                 label="Role"
                                 name="role"
-                                value={formData.role}
+                                selectedValue={formData.role}
                                 onChange={handleChange}
                                 options={[
                                     { value: 'debtor', label: 'Debtor' },
@@ -428,12 +430,14 @@ const App: React.FC = () => {
                         <ContactSection title="Contact Finance" type="finance" formData={formData} handleChange={handleChange} />
                     </Section>
                     
-                    <Section title="Financial Information">
+                    <Section title="Financial & Credit Information">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                             <div className="space-y-4">
                                  <InputField label="VAT Number (if applicable)" name="vatNo" value={formData.vatNo} onChange={handleChange} />
                                  <InputField label="Company Registration Number" name="companyRegNo" value={formData.companyRegNo} onChange={handleChange} />
                                  <RadioGroupWithInput namePrefix="eoriOrEin" options={[{value: 'eori', label: 'EORI Number (EU)'}, {value: 'ein', label: 'EIN Number (US)'}]} formData={formData} handleChange={handleChange} />
+                                 <InputField label="Requested Credit Limit" name="requestedCreditLimit" value={formData.requestedCreditLimit} onChange={handleChange} />
+                                 <InputField label="Requested Payment Terms" name="requestedPaymentTerms" value={formData.requestedPaymentTerms} onChange={handleChange} />
                             </div>
                             <div className="space-y-4 bg-blue-50 p-4 rounded-md border border-blue-200">
                                 <h3 className="text-md font-semibold text-gray-700">Bank Details</h3>
@@ -446,27 +450,22 @@ const App: React.FC = () => {
                             </div>
                         </div>
                     </Section>
-
-                    <Section title="Credit Information">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputField label="Requested Credit Limit" name="requestedCreditLimit" value={formData.requestedCreditLimit} onChange={handleChange} />
-                            <InputField label="Requested Payment Terms" name="requestedPaymentTerms" value={formData.requestedPaymentTerms} onChange={handleChange} />
-                        </div>
-                    </Section>
                     
                     <Section title="To be completed by Red2Roast (Internal)">
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
                             <CheckboxField label="POA" name="poa" checked={formData.poa} onChange={handleChange} />
-                            <CheckboxField label="Scope" name="scope" checked={formData.scope} onChange={handleChange} />
-                            <CheckboxField label="GDPR" name="gdpr" checked={formData.gdpr} onChange={handleChange} />
                             <CheckboxField label="Credit" name="credit" checked={formData.credit} onChange={handleChange} />
-                            <CheckboxField label="Company Registration" name="companyRegistration" checked={formData.companyRegistration} onChange={handleChange} />
-                            <CheckboxField label="Passport" name="passport" checked={formData.passport} onChange={handleChange} />
                             <CheckboxField label="Signed Quote" name="signedQuote" checked={formData.signedQuote} onChange={handleChange} />
-                            <CheckboxField label="Highrise" name="highrise" checked={formData.highrise} onChange={handleChange} />
-                            <CheckboxField label="Credit Check" name="creditCheck" checked={formData.creditCheck} onChange={handleChange} />
                             <CheckboxField label="IT" name="it" checked={formData.it} onChange={handleChange} />
+                            
+                            <CheckboxField label="Scope" name="scope" checked={formData.scope} onChange={handleChange} />
+                            <CheckboxField label="Company Reg" name="companyRegistration" checked={formData.companyRegistration} onChange={handleChange} />
+                            <CheckboxField label="Highrise" name="highrise" checked={formData.highrise} onChange={handleChange} />
                             <CheckboxField label="Exact" name="exact" checked={formData.exact} onChange={handleChange} />
+
+                            <CheckboxField label="GDPR" name="gdpr" checked={formData.gdpr} onChange={handleChange} />
+                            <CheckboxField label="Passport" name="passport" checked={formData.passport} onChange={handleChange} />
+                            <CheckboxField label="Credit Check" name="creditCheck" checked={formData.creditCheck} onChange={handleChange} />
                             <CheckboxField label="Bank" name="bank" checked={formData.bank} onChange={handleChange} />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -475,8 +474,12 @@ const App: React.FC = () => {
                         </div>
                     </Section>
 
-                    <Section title="Agreement">
-                         <div className="space-y-4">
+                    <Section title="Agreement Mgmt">
+                        <div className="space-y-4">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <InputField label="Date" name="agreementDate" type="date" value={formData.agreementDate} onChange={handleChange} />
+                                <InputField label="Signature" name="signature" value={formData.signature} onChange={handleChange} />
+                           </div>
                             <label htmlFor="remarks" className="mb-1 text-sm font-semibold text-gray-700">Remarks</label>
                             <textarea
                                 id="remarks"
@@ -484,12 +487,8 @@ const App: React.FC = () => {
                                 value={formData.remarks}
                                 onChange={handleChange}
                                 rows={4}
-                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:border-red-500 transition"
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            <InputField label="Agreement Date" name="agreementDate" type="date" value={formData.agreementDate} onChange={handleChange} />
-                            <InputField label="Signature" name="signature" value={formData.signature} onChange={handleChange} />
                         </div>
                     </Section>
                 </form>

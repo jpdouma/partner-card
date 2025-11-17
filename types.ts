@@ -1,10 +1,7 @@
 export interface FormData {
-  // Header Status
-  status: 'New' | 'Update';
-
-  // Red2Roast Section
+  // Header Section
   date: string;
-  requestBy: 'Gert-Jan Dokter' | 'Jan Paul Douma';
+  requestBy: string;
   role: 'debtor' | 'creditor';
   
   // Debtor/Creditor Section
@@ -59,7 +56,7 @@ export interface FormData {
   requestedCreditLimit: string;
   requestedPaymentTerms: string;
 
-  // Red2Roast Completion Section - Individual Checkboxes
+  // Red2Roast Completion Section
   poa: boolean;
   scope: boolean;
   gdpr: boolean;

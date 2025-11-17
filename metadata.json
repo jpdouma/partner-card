@@ -1,5 +1,5 @@
 {
-  "name": "Partner Onboarding Form",
-  "description": "A digital form to onboard new partners, replicating the Red2Roast Partner Card. Users can fill in the details and export the form data as a CSV, PDF, or Excel file.",
+  "name": "Red2Roast Partner Onboarding Form",
+  "description": "A digital form to onboard new partners for Red2Roast. Users can fill in the details and export the form data as a CSV, PDF, or Excel file.",
   "requestFramePermissions": []
 }
